@@ -12,10 +12,11 @@ variable "region" {
   default = "us-east-1"
 }
 
+variable "VM_USERNAME" { default = "Administrator" }
+variable "VM_PASSWORD" { default = "SuperS3cr3t!!!!" }
+
 locals { 
   timestamp = regex_replace(timestamp(), "[- TZ:]", "")
-  username = "Administrator"
-  password = "SuperS3cr3t!!!!"
 }
 
 # source blocks are generated from your builders; a source can be referenced in
@@ -38,8 +39,8 @@ source "amazon-ebs" "firstrun-windows" {
   user_data      = <<-EOF
 <powershell>
 # Set administrator password
-net user ${local.username} ${local.password}
-wmic useraccount where "name='${local.username}'" set PasswordExpires=FALSE
+net user ${var.VM_USERNAME} ${var.VM_PASSWORD}
+wmic useraccount where "name='${var.VM_USERNAME}'" set PasswordExpires=FALSE
 
 # First, make sure WinRM can't be connected to
 netsh advfirewall firewall set rule name="Windows Remote Management (HTTP-In)" new enable=yes action=block
@@ -77,8 +78,8 @@ netsh advfirewall firewall set rule name="Windows Remote Management (HTTP-In)" n
 Start-Service -Name WinRM
 </powershell>
 EOF
-  winrm_password = "${local.password}"
-  winrm_username = "${local.username}"
+  winrm_password = "${var.VM_PASSWORD}"
+  winrm_username = "${var.VM_USERNAME}"
 }
 
 # a build block invokes sources and runs provisioning steps on them.
@@ -107,8 +108,8 @@ build {
       // "-e", "ansible_winrm_scheme=https",
       // "-e", "ansible_port=5986",
       // "-e", "ansible_winrm_server_cert_validation=ignore",
-      "-e", "user_username=${local.username}",
-      "-e", "user_password=${local.password}",
+      "-e", "user_username=${var.VM_USERNAME}",
+      "-e", "user_password=${var.VM_PASSWORD}",
     ]
     playbook_file = "playbook.yml"
   }

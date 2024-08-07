@@ -1,0 +1,3 @@
+- name: Set timezone to 'UTC Standard Time'
+  win_timezone:
+    timezone: UTC
